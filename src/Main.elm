@@ -18,6 +18,7 @@ type alias Model =
     , w : Int
     , h : Int
     , scale : Float
+    , score : Int
     , x : Float
     , y : Float
     , v : Float
@@ -34,6 +35,7 @@ type Msg
     | OnResize Int Int
     | PushTapped
     | ToggleShowSpeed
+    | ResetStone
 
 
 main : AppWithTick () Model Msg
@@ -58,6 +60,7 @@ init =
     , w = 0
     , h = 0
     , scale = 1.0
+    , score = 0
     , x = 0
     , y = stoneDistance
     , v = 0
@@ -179,6 +182,7 @@ update msg model =
                                 )
                         )
                 , mode = newMode
+                , score = if newMode == Win && not (model.mode == Win) then model.score + 1 else if newMode == Lose then 0 else model.score
               }
             , Cmd.none
             )
@@ -197,6 +201,9 @@ update msg model =
 
         ToggleShowSpeed ->
             ( { model | showSpeed = not model.showSpeed }, Cmd.none)
+
+        ResetStone ->
+            ( { model | x = 0, y = stoneDistance, v = 0, mode = Push, pushing = False }, Cmd.none)
            
 
 
@@ -219,7 +226,7 @@ view model =
         , line ( toFloat model.w * -0.5, hogglinje ) ( toFloat model.w * 0.5, hogglinje ) |> outlined (solid 2) white
         , group [
          if model.showSpeed then group [ text ("Speed: " ++ String.fromInt (truncate (model.v * 100))) |> alignLeft |> filled white |> move ( 100, 12 )
-        , rect 100 50
+        , roundedRect 100 50 4
                     |> filled buttonColor
                     |> move (150, -35)
                     |> notifyTap ToggleShowSpeed
@@ -229,7 +236,7 @@ view model =
                     |> notifyTap ToggleShowSpeed
         
          ] else group [
-          rect 100 50
+          roundedRect 100 50 4
                     |> filled buttonColor
                     |> move (150, -35)
                     |> notifyTap ToggleShowSpeed
@@ -238,10 +245,12 @@ view model =
                 , text "(easy mode)" |> size 12 |> centered |> filled white |> move (150, -47)
                     |> notifyTap ToggleShowSpeed
         ] 
+            , text (String.fromInt model.score) |> size 36 |> bold |> centered |> filled white |> move (150, 280)
+            , text "SCORE" |> centered |> filled white |> move (150, 312)
         , case model.mode of
             Push ->
                 group [text "Push the stone" |> size 16 |> bold |> alignLeft |> filled white |> move ( statusX, statusY )
-                , rect 100 50
+                , roundedRect 100 50 4
                     |> filled (if model.pushing then green else buttonColor)
                     |> move (-150, -35)
                     |> notifyTap PushTapped
@@ -253,10 +262,26 @@ view model =
                 text "Hope and pray..." |> size 16 |> bold |> alignLeft |> filled blue |> move ( statusX, statusY )
 
             Win ->
+                group [
                 text "You Win!" |> size 28 |> bold |> alignLeft |> filled green |> move ( statusX, statusY )
+                , roundedRect 100 50 4
+                    |> filled buttonColor
+                    |> move (-150, -35)
+                    |> notifyTap ResetStone
+                , text "Play Again" |> size 15 |> centered |> filled white |> move (-150, -40)
+                    |> notifyTap ResetStone
+                ]
 
             Lose ->
+                group [
                 text "You lose..." |> size 18 |> bold |> alignLeft |> filled red |> move ( statusX, statusY )
+                , roundedRect 100 50 4
+                    |> filled buttonColor
+                    |> move (-150, -35)
+                    |> notifyTap ResetStone
+                , text "Play Again" |> size 15 |> centered |> filled white |> move (-150, -40)
+                    |> notifyTap ResetStone
+                ]
         , circle targetRadius
             |> filled red
             |> move ( 0, targetDistance )
