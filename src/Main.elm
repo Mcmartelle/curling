@@ -100,6 +100,7 @@ stoneRadius =
 hogglinje =
     0
 
+
 arenaHeight =
     800
 
@@ -115,8 +116,10 @@ targetDistance =
 targetRadius =
     30
 
+
 tooFar =
     targetDistance + stoneRadius + targetRadius
+
 
 statusX =
     -200
@@ -130,6 +133,7 @@ dark : Color
 dark =
     rgba 10 10 10 1
 
+
 buttonColor : Color
 buttonColor =
     rgba 64 64 64 1
@@ -142,7 +146,8 @@ update msg model =
             ( let
                 dt =
                     t - model.time
-                newMode = 
+
+                newMode =
                     if model.y < hogglinje then
                         Push
 
@@ -157,7 +162,6 @@ update msg model =
 
                     else
                         Lose
-
               in
               { model
                 | time = t
@@ -168,11 +172,16 @@ update msg model =
                 , v =
                     clamp 0
                         100
-                        (model.v + dt
+                        (model.v
+                            + dt
                             * clamp -1
                                 50
                                 ((if model.y < hogglinje then
-                                    if model.pushing then 1 else 0
+                                    if model.pushing then
+                                        1
+
+                                    else
+                                        0
 
                                   else
                                     0
@@ -182,7 +191,15 @@ update msg model =
                                 )
                         )
                 , mode = newMode
-                , score = if newMode == Win && not (model.mode == Win) then model.score + 1 else if newMode == Lose then 0 else model.score
+                , score =
+                    if newMode == Win && not (model.mode == Win) then
+                        model.score + 1
+
+                    else if newMode == Lose then
+                        0
+
+                    else
+                        model.score
               }
             , Cmd.none
             )
@@ -194,18 +211,16 @@ update msg model =
             ( model, Cmd.none )
 
         OnResize w h ->
-            ( { model | w = w, h = h, scale = min ((toFloat h) / arenaHeight ) ((toFloat w) / arenaWidth )}, Cmd.none )
+            ( { model | w = w, h = h, scale = min (toFloat h / arenaHeight) (toFloat w / arenaWidth) }, Cmd.none )
 
         PushTapped ->
-            ( { model | pushing = not model.pushing }, Cmd.none)
+            ( { model | pushing = not model.pushing }, Cmd.none )
 
         ToggleShowSpeed ->
-            ( { model | showSpeed = not model.showSpeed }, Cmd.none)
+            ( { model | showSpeed = not model.showSpeed }, Cmd.none )
 
         ResetStone ->
-            ( { model | x = 0, y = stoneDistance, v = 0, mode = Push, pushing = False }, Cmd.none)
-           
-
+            ( { model | x = 0, y = stoneDistance, v = 0, mode = Push, pushing = False }, Cmd.none )
 
 
 
@@ -224,69 +239,115 @@ view model =
         [ rect (toFloat model.w) (toFloat model.h)
             |> filled dark
         , line ( toFloat model.w * -0.5, hogglinje ) ( toFloat model.w * 0.5, hogglinje ) |> outlined (solid 2) white
-        , group [
-         if model.showSpeed then group [ text ("Speed: " ++ String.fromInt (truncate (model.v * 100))) |> alignLeft |> filled white |> move ( 100, 12 )
-        , roundedRect 100 50 4
-                    |> filled buttonColor
-                    |> move (150, -35)
-                    |> notifyTap ToggleShowSpeed
-                , text "Hide Speed" |> size 14 |> centered |> filled white |> move (150, -34)
-                    |> notifyTap ToggleShowSpeed
-                , text "(hard mode)" |> size 12 |> centered |> filled white |> move (150, -47)
-                    |> notifyTap ToggleShowSpeed
-        
-         ] else group [
-          roundedRect 100 50 4
-                    |> filled buttonColor
-                    |> move (150, -35)
-                    |> notifyTap ToggleShowSpeed
-                , text "Show Speed" |> size 14 |> centered |> filled white |> move (150, -34)
-                    |> notifyTap ToggleShowSpeed
-                , text "(easy mode)" |> size 12 |> centered |> filled white |> move (150, -47)
-                    |> notifyTap ToggleShowSpeed
-        ] 
-            , text (String.fromInt model.score) |> size 36 |> bold |> centered |> filled white |> move (150, 280)
-            , text "SCORE" |> centered |> filled white |> move (150, 312)
-        , case model.mode of
-            Push ->
-                group [text "Push the stone" |> size 16 |> bold |> alignLeft |> filled white |> move ( statusX, statusY )
-                , roundedRect 100 50 4
-                    |> filled (if model.pushing then green else buttonColor)
-                    |> move (-150, -35)
-                    |> notifyTap PushTapped
-                , text (if model.pushing then "Pushing" else "Push") |> size 15 |> centered |> filled white |> move (-150, -40)
-                    |> notifyTap PushTapped
-                ]
+        , group
+            [ if model.showSpeed then
+                group
+                    [ text ("Speed: " ++ String.fromInt (truncate (model.v * 100))) |> alignLeft |> filled white |> move ( 100, 12 )
+                    , roundedRect 100 50 4
+                        |> filled buttonColor
+                        |> move ( 150, -35 )
+                        |> notifyTap ToggleShowSpeed
+                    , text "Hide Speed"
+                        |> size 14
+                        |> centered
+                        |> filled white
+                        |> move ( 150, -34 )
+                        |> notifyTap ToggleShowSpeed
+                    , text "(hard mode)"
+                        |> size 12
+                        |> centered
+                        |> filled white
+                        |> move ( 150, -47 )
+                        |> notifyTap ToggleShowSpeed
+                    ]
 
-            Wait ->
-                text "Hope and pray..." |> size 16 |> bold |> alignLeft |> filled blue |> move ( statusX, statusY )
+              else
+                group
+                    [ roundedRect 100 50 4
+                        |> filled buttonColor
+                        |> move ( 150, -35 )
+                        |> notifyTap ToggleShowSpeed
+                    , text "Show Speed"
+                        |> size 14
+                        |> centered
+                        |> filled white
+                        |> move ( 150, -34 )
+                        |> notifyTap ToggleShowSpeed
+                    , text "(easy mode)"
+                        |> size 12
+                        |> centered
+                        |> filled white
+                        |> move ( 150, -47 )
+                        |> notifyTap ToggleShowSpeed
+                    ]
+            , text (String.fromInt model.score) |> size 36 |> bold |> centered |> filled white |> move ( 150, 280 )
+            , text "SCORE" |> centered |> filled white |> move ( 150, 312 )
+            , case model.mode of
+                Push ->
+                    group
+                        [ text "Push the stone" |> size 16 |> bold |> alignLeft |> filled white |> move ( statusX, statusY )
+                        , roundedRect 100 50 4
+                            |> filled
+                                (if model.pushing then
+                                    green
 
-            Win ->
-                group [
-                text "You Win!" |> size 28 |> bold |> alignLeft |> filled green |> move ( statusX, statusY )
-                , roundedRect 100 50 4
-                    |> filled buttonColor
-                    |> move (-150, -35)
-                    |> notifyTap ResetStone
-                , text "Play Again" |> size 15 |> centered |> filled white |> move (-150, -40)
-                    |> notifyTap ResetStone
-                ]
+                                 else
+                                    buttonColor
+                                )
+                            |> move ( -150, -35 )
+                            |> notifyTap PushTapped
+                        , text
+                            (if model.pushing then
+                                "Pushing"
 
-            Lose ->
-                group [
-                text "You lose..." |> size 18 |> bold |> alignLeft |> filled red |> move ( statusX, statusY )
-                , roundedRect 100 50 4
-                    |> filled buttonColor
-                    |> move (-150, -35)
-                    |> notifyTap ResetStone
-                , text "Play Again" |> size 15 |> centered |> filled white |> move (-150, -40)
-                    |> notifyTap ResetStone
-                ]
-        , circle targetRadius
-            |> filled red
-            |> move ( 0, targetDistance )
-        , circle stoneRadius
-            |> filled gray
-            |> move ( model.x, model.y )
-        ] |> scale model.scale ]
+                             else
+                                "Push"
+                            )
+                            |> size 15
+                            |> centered
+                            |> filled white
+                            |> move ( -150, -40 )
+                            |> notifyTap PushTapped
+                        ]
 
+                Wait ->
+                    text "Hope and pray..." |> size 16 |> bold |> alignLeft |> filled blue |> move ( statusX, statusY )
+
+                Win ->
+                    group
+                        [ text "You Win!" |> size 28 |> bold |> alignLeft |> filled green |> move ( statusX, statusY )
+                        , roundedRect 100 50 4
+                            |> filled buttonColor
+                            |> move ( -150, -35 )
+                            |> notifyTap ResetStone
+                        , text "Play Again"
+                            |> size 15
+                            |> centered
+                            |> filled white
+                            |> move ( -150, -40 )
+                            |> notifyTap ResetStone
+                        ]
+
+                Lose ->
+                    group
+                        [ text "You lose..." |> size 18 |> bold |> alignLeft |> filled red |> move ( statusX, statusY )
+                        , roundedRect 100 50 4
+                            |> filled buttonColor
+                            |> move ( -150, -35 )
+                            |> notifyTap ResetStone
+                        , text "Play Again"
+                            |> size 15
+                            |> centered
+                            |> filled white
+                            |> move ( -150, -40 )
+                            |> notifyTap ResetStone
+                        ]
+            , circle targetRadius
+                |> filled red
+                |> move ( 0, targetDistance )
+            , circle stoneRadius
+                |> filled gray
+                |> move ( model.x, model.y )
+            ]
+            |> scale model.scale
+        ]
